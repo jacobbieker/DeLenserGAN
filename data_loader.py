@@ -22,6 +22,9 @@ class DataLoader():
             if not is_testing and np.random.random() < 0.5:
                 img_A = np.fliplr(img_A)
                 img_B = np.fliplr(img_B)
+            if not is_testing and np.random.random() > 0.5:
+                img_A = np.flipud(img_A)
+                img_B = np.flipud(img_B)
 
             imgs_A.append(img_A)
             imgs_B.append(img_B)
@@ -44,6 +47,9 @@ class DataLoader():
                 if not is_testing and np.random.random() > 0.5:
                     img_A = np.fliplr(img_A)
                     img_B = np.fliplr(img_B)
+                if not is_testing and np.random.random() < 0.5:
+                    img_A = np.flipud(img_A)
+                    img_B = np.flipud(img_B)
 
                 imgs_A.append(img_A)
                 imgs_B.append(img_B)
@@ -58,13 +64,13 @@ class DataLoader():
             if "sci" in element:
                 if "sim" in element:
                     img = fits.getdata(element, ext=0)
-                    img = img[:100,:100]
-                    img = np.pad(img, ((14,14),(14,14)), mode='constant', constant_values=0)
+                    center = (int(img.shape[0]/2), int(img.shape[1]/2))
+                    img = img[center[0]-32:center[0]+32,center[1]-32:center[1]+32]
                     sim_img.append(img)
                 elif "source" in element:
                     img = fits.getdata(element, ext=0)
-                    img = img[:100,:100]
-                    img = np.pad(img, ((14,14),(14,14)), mode='constant', constant_values=0)
+                    center = (int(img.shape[0]/2), int(img.shape[1]/2))
+                    img = img[center[0]-32:center[0]+32,center[1]-32:center[1]+32]
                     source_img.append(img)
         sim_img = np.asarray(sim_img).T
         source_img = np.asarray(source_img).T

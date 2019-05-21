@@ -19,13 +19,13 @@ import os
 class Pix2Pix():
     def __init__(self):
         # Input shape
-        self.img_rows = 128
-        self.img_cols = 128
+        self.img_rows = 64
+        self.img_cols = 64
         self.channels = 5
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
 
         # Configure data loader
-        self.dataset_name = 'lenses'
+        self.dataset_name = 'Clenses64'
         self.data_loader = DataLoader(dataset_name=self.dataset_name,
                                       img_res=(self.img_rows, self.img_cols))
 
@@ -45,6 +45,7 @@ class Pix2Pix():
         self.discriminator.compile(loss='mse',
                                    optimizer=optimizer,
                                    metrics=['accuracy'])
+        #print(self.discriminator.summary())
 
         #-------------------------
         # Construct Computational
@@ -53,6 +54,7 @@ class Pix2Pix():
 
         # Build the generator
         self.generator = self.build_generator()
+        #print(self.generator.summary())
 
         # Input images and their conditioning images
         img_A = Input(shape=self.img_shape)
@@ -103,17 +105,17 @@ class Pix2Pix():
         d4 = conv2d(d3, self.gf*8)
         d5 = conv2d(d4, self.gf*8)
         d6 = conv2d(d5, self.gf*8)
-        d7 = conv2d(d6, self.gf*8)
+        #d7 = conv2d(d6, self.gf*8)
 
         # Upsampling
-        u1 = deconv2d(d7, d6, self.gf*8)
-        u2 = deconv2d(u1, d5, self.gf*8)
-        u3 = deconv2d(u2, d4, self.gf*8)
-        u4 = deconv2d(u3, d3, self.gf*4)
-        u5 = deconv2d(u4, d2, self.gf*2)
-        u6 = deconv2d(u5, d1, self.gf)
+        u1 = deconv2d(d6, d5, self.gf*8)
+        u2 = deconv2d(u1, d4, self.gf*8)
+        u3 = deconv2d(u2, d3, self.gf*8)
+        u4 = deconv2d(u3, d2, self.gf*4)
+        u5 = deconv2d(u4, d1, self.gf*2)
+        #u6 = deconv2d(u5, d1, self.gf)
 
-        u7 = UpSampling2D(size=2)(u6)
+        u7 = UpSampling2D(size=2)(u5)
         output_img = Conv2D(self.channels, kernel_size=4, strides=1, padding='same', activation='tanh')(u7)
 
         return Model(d0, output_img)
@@ -152,7 +154,7 @@ class Pix2Pix():
         fake = np.zeros((batch_size,) + self.disc_patch)
 
         for epoch in range(epochs):
-            for batch_i, (imgs_A, imgs_B) in enumerate(self.data_loader.load_batch(batch_size)):
+            for batch_i, (imgs_B, imgs_A) in enumerate(self.data_loader.load_batch(batch_size)):
 
                 # ---------------------
                 #  Train Discriminator
@@ -189,7 +191,7 @@ class Pix2Pix():
         os.makedirs('images/%s' % self.dataset_name, exist_ok=True)
         r, c = 3, 3
 
-        imgs_A, imgs_B = self.data_loader.load_data(batch_size=3, is_testing=True)
+        imgs_B, imgs_A = self.data_loader.load_data(batch_size=3, is_testing=True)
         fake_A = self.generator.predict(imgs_B)
 
         gen_imgs = np.concatenate([imgs_B, fake_A, imgs_A])
@@ -212,4 +214,4 @@ class Pix2Pix():
 
 if __name__ == '__main__':
     gan = Pix2Pix()
-    gan.train(epochs=64000, batch_size=1, sample_interval=100)
+    gan.train(epochs=64000, batch_size=16, sample_interval=100)
